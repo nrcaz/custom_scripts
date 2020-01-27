@@ -1,0 +1,40 @@
+#! /bin/sh
+[[ $1 ]] || { echo "specify an origin branch or a commit message :\ncommit [origin branch] [new branch] commitmessage"; exit 1; }
+
+trimSpace() {
+        echo $1 | tr -d [:space:] | sed "s/:/\//"
+        # gerer les different cas ou le nom de branch serait incorrect
+}
+
+if [[ ! $2 ]]
+        then 
+		newbranch=$(trimSpace "$1")
+		[[ $? = 1 ]] && { echo "invalid commit message"; exit 1; }
+		message=$1
+        elif [[ ! $3 ]]
+	then                 
+                newbranch=$(trimSpace "$2")
+                [[ $? = 1 ]] && { echo "invalid newbranch or message"; exit 1; }
+		message=$2
+		origin=$1
+	else 
+ 		newbranch=$(trimSpace "$2")
+                [[ $? = 1 ]] && { echo "invalid newbranch or message"; exit 1; }
+                message=$3
+		origin=$1
+fi
+
+executeGitCommands() {
+        remote=$(git remote)
+        (
+		set -e
+		[[ $2 ]] && git checkout $origin
+        	git branch $newbranch
+        	git checkout $newbranch
+        	git commit -m "$message"
+        	git push -u $remote $newbranch 
+        )
+	[[ $? == 1 ]] && return 1
+}
+
+executeGitCommands
