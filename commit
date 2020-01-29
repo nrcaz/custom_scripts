@@ -6,21 +6,21 @@ trimSpace() {
 }
 
 if [[ ! $2 ]]
-        then 
-		newbranch=$(trimSpace "$1")
-		[[ $? = 1 ]] && { echo "invalid commit message"; exit 1; }
-		message=$1
-        elif [[ ! $3 ]]
-	then                 
-		newbranch=$(trimSpace "$2")
-		[[ $? = 1 ]] && { echo "invalid newbranch or message"; exit 1; }
-		message=$2
-		origin=$1
-	else 
- 		newbranch=$(trimSpace "$2")
-		[[ $? = 1 ]] && { echo "invalid newbranch or message"; exit 1; }
-		message=$3
-		origin=$1
+then 
+	newbranch=$(trimSpace "$1")
+	[[ $? = 1 ]] && { echo "invalid commit message"; exit 1; }
+	message=$1
+elif [[ ! $3 ]]
+then                 
+	newbranch=$(trimSpace "$2")
+	[[ $? = 1 ]] && { echo "invalid newbranch or message"; exit 1; }
+	message=$2
+	origin=$1
+else 
+	newbranch=$(trimSpace "$2")
+	[[ $? = 1 ]] && { echo "invalid newbranch or message"; exit 1; }
+	message=$3
+	origin=$1
 fi
 
 executeGitCommands() {
@@ -28,7 +28,7 @@ executeGitCommands() {
 		currentbranch=$(git status -s -b | tr -d "## ")
         (
 			set -e
-			[[ $2 ]] && git checkout $origin
+			[[ $origin ]] && git checkout $origin
         	[[ $currentbranch != $newbranch ]] && git branch $newbranch
         	git checkout $newbranch
         	git commit -m "$message"
