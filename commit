@@ -3,37 +3,46 @@
 
 trimSpace() {
         echo $1 | tr -d [:space:] | sed "s/:/\//"
+		# gerer les different cas ou le nom de branch serait incorrect
 }
 
 if [[ ! $2 ]]
 then 
 	newbranch=$(trimSpace "$1")
-	[[ $? = 1 ]] && { echo "invalid commit message"; exit 1; }
+	[[ $? == 1 ]] && { echo "invalid commit message"; exit 1; }
 	message=$1
 elif [[ ! $3 ]]
 then                 
 	newbranch=$(trimSpace "$2")
-	[[ $? = 1 ]] && { echo "invalid newbranch or message"; exit 1; }
+	[[ $? == 1 ]] && { echo "invalid newbranch name or message"; exit 1; }
 	message=$2
 	origin=$1
 else 
 	newbranch=$(trimSpace "$2")
-	[[ $? = 1 ]] && { echo "invalid newbranch or message"; exit 1; }
+	[[ $? == 1 ]] && { echo "invalid newbranch name"; exit 1; }
 	message=$3
 	origin=$1
 fi
 
 executeGitCommands() {
-        remote=$(git remote)
-		currentbranch=$(git status -s -b | tr -d "## ")
-        (
-			set -e
-			[[ $origin ]] && git checkout $origin
-        	[[ $currentbranch != $newbranch ]] && git branch $newbranch
-        	git checkout $newbranch
-        	git commit -m "$message"
-        	git push -u $remote $newbranch 
-        )
+	remote=$(git remote)
+	currentbranch=$(git status -s -b | tr -d "## ")
+
+	[[ $origin ]] && git checkout $origin
+
+	if [[ $? == 1 && $origin ]]
+	then
+		git stash
+		git checkout $origin
+		git stash pop
+	fi
+	(
+		set -e
+		[[ $currentbranch != $newbranch ]] && git branch $newbranch
+		git checkout $newbranch
+		git commit -m "$message"
+		git push -u $remote $newbranch 
+	)
 	[[ $? == 1 ]] && return 1
 }
 
